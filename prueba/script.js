@@ -7,11 +7,9 @@
   function init() {
     let dragged = null; // A reference to the element currently being dragged
 
-    // This event should only fire on the drag targets.
-    // Instead of finding every drag target,
-    // we can add the event to the document and disregard
-    // all elements that are not of class "draggable"
+ 
     // Para agarrar cualquier elemento con la clase draggable
+    // Esta parte  se encarga de que puedas arrastrar las opciones (Escena, mensaje final)
     document.addEventListener(
       'dragstart',
       (event) => {
@@ -29,7 +27,12 @@
       false
     );
 
-    // This event resets styles after a drag has completed (successfully or not)
+    // fin de la funcion encargada de arrastrar 
+
+    
+
+  // se encarga de que este las conexiones vuelva a funcionar si se eliminan 
+  // Es un posible uso pero no estoy seguro los errores solo me aparecieron una vez 
     document.addEventListener(
       'dragend',
       (event) => {
@@ -40,13 +43,16 @@
       },
       false
     );
-
+// fin de la funcion encargada de restablecer el estilo
     
-    // Next, events intended for the drop target - the Diagram div
-
+// esta parte pone la etiqueta inicial 
     const div = document.getElementById('myDiagramDiv');
-    // Este dragenter es para cuando myDiagramDiv detecta que hay un elemento que le está pasando x encima 
-    div.addEventListener(
+// fin de la estiqueta inicial 
+
+ //-------------------------------------------------------------------------------   
+// Este dragenter es para cuando myDiagramDiv detecta que hay un elemento que le está pasando x encima 
+   // desconosco para que pueda servir esta parte 
+div.addEventListener(
       'dragenter',
       (event) => {
         // Here you could also set effects on the Diagram,
@@ -57,7 +63,7 @@
       },
       false
     );
-
+// -------------------------------------------------------------------------------
     // En resumen, este fragmento de código controla el comportamiento del evento dragover sobre el área del diagrama GoJS. Permite resaltar la parte del diagrama sobre la cual se está arrastrando un elemento y gestiona las condiciones para permitir o denegar el drop basado en la posición del cursor y la clase del elemento receptor (dropzone).
 
     // La diferencia es que el dragenter se ejecuta cuando entra en una zona específica y ya. El dragover se dispara repetidamente mientras el elemento arrastrado se mueve dentro del area de destino 
@@ -65,9 +71,9 @@
     div.addEventListener(
       'dragover',
       (event) => {
-        // We call preventDefault to allow a drop
-        // But on divs that already contain an element,
-        // we want to disallow dropping
+      // el if se encarfa de colocar los colores de las tarjetas cuando se colocan sobre otra
+      // NOTAS : el color solo es al colocarlo por primera vez
+      // tambien en chat gpt me dice que se encarga de calcular el posicionamiento 
         if (div === myDiagram.div) {
           const can = event.target;
           const pixelratio = myDiagram.computePixelRatio();
@@ -100,6 +106,8 @@
       false
     );
 
+    // segun entendi este elmento se encarga de reestablecer el estilos llamando a otro elemento llamado  'dragleave'
+    // NOTA: no se notaron diferiencias a la hora de remover el elemento 
     div.addEventListener(
       'dragleave',
       (event) => {
@@ -111,8 +119,12 @@
       },
       false
     );
+    // fin del llamador de dragleave
 
     // Se ejecuta al soltar un elemento en el myDiagram
+    //----- IMPORTANTE-------------------------------------------------------
+    // Cuando este codigo se encarga de hacer funcionar la parte que te permite arrastrar funciones 
+    // 
     div.addEventListener(
       'drop',
       (event) => {
@@ -125,7 +137,7 @@
           const can = event.target;
           const pixelratio = myDiagram.computePixelRatio();
 
-          // if the target is not the canvas, we may have trouble, so just quit:
+         // Esta parte se encarfa de calcular las coordenadas del ranton 
           if (!(can instanceof HTMLCanvasElement)) return;
 
           const bbox = can.getBoundingClientRect();
@@ -136,13 +148,9 @@
           const mx = event.clientX - bbox.left * (can.width / pixelratio / bbw);
           const my = event.clientY - bbox.top * (can.height / pixelratio / bbh);
           const point = myDiagram.transformViewToDoc(new go.Point(mx, my));
-          // // if there's nothing at that point
-          // if (myDiagram.findPartAt(point) === null) {
-          //   // a return here doesn't allow the drop to happen
-          //   return;
-          // }
-          // otherwise create a new node at the drop point
-          // SE CREA UN NUEVO NODO
+
+          // ----------- raton --------------
+// esta parte se encarga que las etiquetas se coloquen donde el usuario quiere 
           myDiagram.startTransaction('new node');
           const newdata = {
             // assuming the locationSpot is Spot.Center:
@@ -160,7 +168,7 @@
             onDrop(newnode, point);
           }
           myDiagram.commitTransaction('new node');
-
+// fin de la parte encargada del posionamiento 
         }
 
         // If we were using drag data, we could get it here, ie:
@@ -169,7 +177,9 @@
       false
     );
 
+   
     // this is called on a stationary node or link during an external drag-and-drop into a Diagram
+    // se encarga de resaltar la parte seleccionada y que se deje de resaltar cuando se deja  de seleccionar
     function onHighlight(part) {
       // may be null
       const oldskips = myDiagram.skipsUndoManager;
@@ -183,9 +193,11 @@
       myDiagram.commitTransaction('highlight');
       myDiagram.skipsUndoManager = oldskips;
     }
+   //fin del resaltador 
 
     // this is called upon an external drop in this diagram,
     // after a new node has been created and selected
+    // hace que se junten las seldas cuando se sueltan por primera vez
     function onDrop(newNode, point) {
       // look for a drop directly onto a Node or Link
       const it = myDiagram.findPartsAt(point).iterator;
@@ -207,6 +219,7 @@
       }
       // didn't find anything to drop onto
     }
+    // fin del encargado que se junten por primera vez 
 
     // *****************************
     // Second, set up a GoJS Diagram
@@ -214,8 +227,9 @@
 
     // Since 2.2 you can also author concise templates with method chaining instead of GraphObject.make
     // For details, see https://gojs.net/latest/intro/buildingObjects.html
+    // crea nuevas etiquetas que puedo seleccionar 
     const $ = go.GraphObject.make; // for conciseness in defining templates
-
+// coloca la etiqueta inicial para iniciar el programa 
     const myDiagram = new go.Diagram(
       'myDiagramDiv', // create a Diagram for the DIV HTML element
       {
@@ -225,6 +239,7 @@
     );
 
     // define a Node template | Cambiar estilo o características del nodo
+    // define su comportamiento y como se ven las uniones (nodos )
     myDiagram.nodeTemplate = 
     $(go.Node,'Auto',
       { locationSpot: go.Spot.Center },
@@ -293,8 +308,10 @@
         },
       },
     );
+// fin de los nodos (comportamiento )
 
     // define a Link template | Cambiar estilos o características de los enlaces 
+    // coneciones enetre las etiquetas que puede seleccionar el usuario (comportamiento visual)
     myDiagram.linkTemplate = $(
       go.Link,
       // two path Shapes: the transparent one becomes visible during mouse-over
@@ -321,8 +338,11 @@
         },
       }
     );
+// fin del comporta miento 
 
     // Decide whether a link from node1 to node2 may be created by a drop operation
+    // explica que un nodo no puede conectarse a si mismo 
+    //NOTA: al probar borrar esta linea de codigo se rompe por completo 
     function mayConnect(node1, node2) {
       return node1 !== node2;
     }
@@ -351,6 +371,7 @@
     };
 
     // handle inserting a new node using text that is in the system clipboard
+  // agregar contenido
     document.addEventListener('paste', (e) => {
       const paste = e.clipboardData.getData('text');
       // Decide if the clipboard should be pasted, or if we should let GoJS paste
@@ -371,6 +392,7 @@
         if (commandHandler.canPasteSelection()) commandHandler.pasteSelection();
       }
     });
+    // fin de agregar contenido 
 
     myDiagram.model = new go.GraphLinksModel(
       [
@@ -384,7 +406,8 @@
         // { from: 1, to: 3 },
       ]
     );
-  }
+  } // fin de la primera funcion 
+  // -------------------------------------------------------------------------------------------
   
   function closeForm(formContainer){
     let $body = d.getElementById("body");
